@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/Demo-AI-Edge-Crazy-Train/gitops.git
+    repoURL: https://github.com/michael-bang/train.git
     targetRevision: main
     path: applications
   destination:
