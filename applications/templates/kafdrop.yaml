@@ -1,0 +1,37 @@
+{{ if has "kafdrop" .Values.applications }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kafdrop
+  namespace: openshift-gitops
+spec:
+  project: crazy-train-demo
+  sources:
+  - repoURL: https://github.com/Demo-AI-Edge-Crazy-Train/gitops.git
+    targetRevision: main
+    path: kafdrop/chart
+    helm:
+      valuesObject:
+        kafka:
+          brokerConnect: operating-center-kafka-bootstrap.operating-center.svc.cluster.local:9092
+          configSecretName: kafdrop-kafka-config
+          propertiesFile: /etc/kafka/kafka.properties
+        image:
+          tag: "4.0.1"
+          pullPolicy: IfNotPresent
+  - repoURL: https://github.com/Demo-AI-Edge-Crazy-Train/gitops.git
+    targetRevision: main
+    path: kafdrop/custom
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kafdrop
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true
+    managedNamespaceMetadata:
+      labels:
+        argocd.argoproj.io/managed-by: openshift-gitops
+{{ end }}

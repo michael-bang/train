@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: intelligent-train-env
+  namespace: {{ .Values.global.namespace | quote }}
+data:
+  MQTT_BROKER: "mosquitto"
+  MQTT_PORT: "1883"
+  MQTT_TOPIC: "train-image"
+  MQTT_PUB_TOPIC: "train-model-result"
+  MODEL_PATH: models/model.onnx
+  MIN_CONF_THRESHOLD: "0.7"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: intelligent-train
+    app.kubernetes.io/component: intelligent-train
+    app.kubernetes.io/instance: intelligent-train
+    app.kubernetes.io/name: intelligent-train
+    app.kubernetes.io/part-of: train
+  name: intelligent-train
+  namespace: {{ .Values.global.namespace | quote }}
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: intelligent-train
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: intelligent-train
+        deployment: intelligent-train
+    spec:
+      runtimeClassName: gpu-enabled-class
+      containers:
+      - image: {{ template "intelligentTrain.image" . }}
+        imagePullPolicy: {{ .Values.intelligentTrain.image.pullPolicy | quote }}
+        name: intelligent-train
+        env:
+        - name: NVIDIA_VISIBLE_DEVICES
+          value: nvidia.com/gpu=all
+        envFrom:
+        - configMapRef:
+            name: intelligent-train-env
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        securityContext:
+          privileged: true
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+      serviceAccountName: train
+      serviceAccount: train
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+

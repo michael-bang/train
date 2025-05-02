@@ -1,0 +1,5 @@
+tektonPipelines:
+  workspaces:
+    storageClassName: efs-csi
+  createPipelineRuns: false
+namespace: ci-pipelines

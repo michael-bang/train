@@ -1,0 +1,4 @@
+applications:
+- operating-center
+- kafdrop
+- ci-pipelines
